@@ -1,0 +1,8 @@
+/.Rprofile
+/.vscode
+/rsconnect
+/.posit/publish
+/renv
+*.tar.gz
+/AQLSchemesCust
+/local-repo
