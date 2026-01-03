@@ -8,3 +8,7 @@ quick_test.R
 .Rprofile
 .Rhistory
 .RData
+.git
+.gitignore
+*.Rproj
+.Rproj.user
