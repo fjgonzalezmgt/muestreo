@@ -10,7 +10,7 @@ Aplicación Shiny para el cálculo de planes de muestreo por aceptación según 
 ## 🌐 Demo en vivo
 
 Accede a la aplicación publicada:
-**[https://019b83f9-5d13-af3c-6ceb-6b296240a1ac.share.connect.posit.cloud/](https://019b83f9-5d13-af3c-6ceb-6b296240a1ac.share.connect.posit.cloud/)**
+**[https://019b8411-d43c-48a1-c68a-cf5c1db431c4.share.connect.posit.cloud/](https://019b8411-d43c-48a1-c68a-cf5c1db431c4.share.connect.posit.cloud/)**
 
 ## 📋 Características
 
@@ -105,7 +105,7 @@ testthat::test_dir("tests/testthat")
 ## 👥 Autores
 
 **Quality Analytics**
-- Email: info@qualityanalytics.com
+- Email: info@qualityanalytics.net
 
 ## 📝 Licencia
 
