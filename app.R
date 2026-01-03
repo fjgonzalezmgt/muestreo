@@ -207,7 +207,7 @@ server <- function(input, output, session) {
     plan <- var_plan_var()
     validate(need(!is.null(plan), ""))
     data.frame(Parametro = names(plan), Valor = unname(plan), row.names = NULL)
-  }, striped = TRUE, bordered = TRUE, digits = 5)
+  }, striped = TRUE, bordered = TRUE, digits = 0)
   
   output$var_samplingOut <- renderPrint({
     plan <- var_plan_var()
@@ -272,7 +272,7 @@ server <- function(input, output, session) {
     bordered = FALSE,
     hover = TRUE,
     spacing = "s",
-    digits = 5
+    digits = 0
   )
   
   output$attr_plan_text <- renderPrint({
