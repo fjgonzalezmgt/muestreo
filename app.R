@@ -206,14 +206,19 @@ server <- function(input, output, session) {
   output$var_planSummary <- renderTable({
     plan <- var_plan_var()
     validate(need(!is.null(plan), ""))
-    data.frame(Parametro = names(plan), Valor = unname(plan), row.names = NULL)
-  }, striped = TRUE, bordered = TRUE, digits = 0)
+    df <- data.frame(Parametro = names(plan), Valor = unname(plan), row.names = NULL)
+    df$Valor[df$Parametro == "n"] <- as.integer(round(df$Valor[df$Parametro == "n"], 0))
+    df
+  }, striped = TRUE, bordered = TRUE, digits = 5)
   
   output$var_samplingOut <- renderPrint({
     plan <- var_plan_var()
     validate(need(!is.null(plan), ""))
     writeLines("Sample size (n), Acceptability constant (k) and maximum proportion nonconforming (M)")
-    print(plan)
+    # Redondear n a entero para visualización
+    plan_display <- plan
+    plan_display["n"] <- as.integer(round(plan["n"], 0))
+    print(plan_display)
   })
   
   output$download_var_plan <- downloadHandler(
@@ -266,13 +271,18 @@ server <- function(input, output, session) {
     samplePlan
   })
   
-  output$attr_plan_table <- renderTable(
-    attr_plan_data(),
+  output$attr_plan_table <- renderTable({
+    df <- attr_plan_data()
+    if ("n" %in% names(df)) {
+      df$n <- as.integer(round(df$n, 0))
+    }
+    df
+  },
     striped = TRUE,
     bordered = FALSE,
     hover = TRUE,
     spacing = "s",
-    digits = 0
+    digits = 5
   )
   
   output$attr_plan_text <- renderPrint({
