@@ -3,7 +3,7 @@
 ![R](https://img.shields.io/badge/R-276DC3?style=for-the-badge&logo=r&logoColor=white)
 ![Shiny](https://img.shields.io/badge/Shiny-00B4D8?style=for-the-badge&logo=rstudio&logoColor=white)
 ![Posit Connect](https://img.shields.io/badge/Posit_Connect-447099?style=for-the-badge&logo=rstudio&logoColor=white)
-![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=for-the-badge)
+![License: CC BY 4.0](https://img.shields.io/badge/License-CC_BY_4.0-lightgrey.svg?style=for-the-badge)
 
 Aplicación Shiny para el cálculo de planes de muestreo por aceptación según normas **ANSI/ASQ Z1.4** (atributos) y **ANSI/ASQ Z1.9** (variables).
 
@@ -109,7 +109,16 @@ testthat::test_dir("tests/testthat")
 
 ## 📝 Licencia
 
-Este proyecto está bajo la licencia MIT. Ver archivo `LICENSE` para más detalles.
+Este proyecto está bajo la licencia [Creative Commons Attribution 4.0 International (CC BY 4.0)](https://creativecommons.org/licenses/by/4.0/).
+
+Eres libre de:
+- **Compartir** — copiar y redistribuir el material en cualquier medio o formato
+- **Adaptar** — remezclar, transformar y construir a partir del material para cualquier propósito, incluso comercialmente
+
+Bajo los siguientes términos:
+- **Atribución** — Debes dar crédito apropiado, proporcionar un enlace a la licencia e indicar si se realizaron cambios
+
+Ver archivo `LICENSE` para más detalles.
 
 ## 🤝 Contribuciones
 
