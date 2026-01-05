@@ -234,8 +234,35 @@ server <- function(input, output, session) {
     content = function(file) {
       plan <- var_plan_var()
       validate(need(!is.null(plan), ""))
-      df <- data.frame(Parametro = names(plan), Valor = unname(plan), row.names = NULL)
-      write.csv(df, file, row.names = FALSE)
+      
+      # Crear dataframe con parámetros de entrada
+      params_df <- data.frame(
+        Seccion = c("PARAMETROS_ENTRADA", "", "", "", ""),
+        Parametro = c("Norma", "Tipo_Muestreo", "Nivel_Inspeccion", "Tamaño_Lote", "AQL"),
+        Valor = c("ANSI/ASQ Z1.9", input$var_type, input$var_level, input$var_lot_size, input$var_aql),
+        stringsAsFactors = FALSE
+      )
+      
+      # Crear dataframe con resultados del plan
+      plan_df <- data.frame(
+        Seccion = c("", rep("RESULTADOS_PLAN", length(plan))),
+        Parametro = c("", names(plan)),
+        Valor = c("", unname(plan)),
+        stringsAsFactors = FALSE
+      )
+      
+      # Combinar ambos dataframes
+      final_df <- rbind(params_df, plan_df)
+      write.csv(final_df, file, row.names = FALSE, fileEncoding = "UTF-8")
+      
+      # Agregar BOM para compatibilidad con Excel
+      con <- file(file, open = "r+b")
+      content <- readBin(con, "raw", n = file.info(file)$size)
+      close(con)
+      con <- file(file, open = "wb")
+      writeBin(as.raw(c(0xef, 0xbb, 0xbf)), con)
+      writeBin(content, con)
+      close(con)
     }
   )
   
@@ -307,7 +334,71 @@ server <- function(input, output, session) {
       paste0("plan_atributos_", Sys.Date(), ".csv")
     },
     content = function(file) {
-      write.csv(attr_plan_data(), file, row.names = FALSE)
+      plan_data <- attr_plan_data()
+      
+      # Crear dataframe con parámetros de entrada
+      params_df <- data.frame(
+        Seccion = c("PARAMETROS_ENTRADA", "", "", "", "", ""),
+        Parametro = c("Norma", "Plan_Muestreo", "Tipo_Muestreo", "Nivel_Inspeccion", "Tamaño_Lote", "AQL"),
+        Valor = c("ANSI/ASQ Z1.4", input$attr_plan, input$attr_type, input$attr_level, input$attr_lot_size, input$attr_aql),
+        stringsAsFactors = FALSE
+      )
+      
+      # Crear dataframe con resultados del plan
+      if ("Mensaje" %in% names(plan_data)) {
+        # Si hay un mensaje de error, incluirlo
+        plan_df <- data.frame(
+          Seccion = "RESULTADOS_PLAN",
+          Parametro = "Mensaje",
+          Valor = plan_data$Mensaje,
+          stringsAsFactors = FALSE
+        )
+      } else {
+        # Manejar planes con múltiples filas (Double, Multiple)
+        n_rows <- nrow(plan_data)
+        plan_names <- names(plan_data)
+        
+        # Crear lista para almacenar todas las filas
+        plan_rows <- list()
+        plan_rows[[1]] <- data.frame(Seccion = "", Parametro = "", Valor = "", stringsAsFactors = FALSE)
+        
+        for (i in 1:n_rows) {
+          # Agregar separador de muestra si hay múltiples filas
+          if (n_rows > 1) {
+            plan_rows[[length(plan_rows) + 1]] <- data.frame(
+              Seccion = "RESULTADOS_PLAN",
+              Parametro = paste0("=== Muestra_", i, " ==="),
+              Valor = "",
+              stringsAsFactors = FALSE
+            )
+          }
+          
+          # Agregar cada parámetro de la fila actual
+          for (j in seq_along(plan_names)) {
+            plan_rows[[length(plan_rows) + 1]] <- data.frame(
+              Seccion = "RESULTADOS_PLAN",
+              Parametro = plan_names[j],
+              Valor = as.character(plan_data[i, j]),
+              stringsAsFactors = FALSE
+            )
+          }
+        }
+        
+        plan_df <- do.call(rbind, plan_rows)
+      }
+      
+      # Combinar ambos dataframes
+      final_df <- rbind(params_df, plan_df)
+      write.csv(final_df, file, row.names = FALSE, fileEncoding = "UTF-8")
+      
+      # Agregar BOM para compatibilidad con Excel
+      con <- file(file, open = "r+b")
+      content <- readBin(con, "raw", n = file.info(file)$size)
+      close(con)
+      con <- file(file, open = "wb")
+      writeBin(as.raw(c(0xef, 0xbb, 0xbf)), con)
+      writeBin(content, con)
+      close(con)
     }
   )
   
