@@ -251,8 +251,14 @@ server <- function(input, output, session) {
     par(mfcol = c(1, 2))
     plot(OCASNS$pd, OCV, type = "l", xlab = "Proportion Nonconforming", ylab = "OC Curves",
          main = "OC - ASN Curves", lty = 1)
+    
+    # Para muestreo por variables, n es constante
+    # Ajustar ylim para mejor visualización
+    n_val <- as.numeric(planv[[1]])
+    ylim_range <- c(max(1, n_val * 0.5), n_val * 1.5)
+    
     plot(OCASNS$pd, ASNV, type = "l", lty = 1, xlab = "Proportion Nonconforming",
-         ylab = "ASN Curves", ylim = c(min(ASNV) * 0.9, max(ASNV) * 1.1))
+         ylab = "ASN Curves", ylim = ylim_range)
   })
   
   # ===========================================================================
