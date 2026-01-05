@@ -10,7 +10,7 @@ Aplicación Shiny para el cálculo de planes de muestreo por aceptación según 
 ## 🌐 Demo en vivo
 
 Accede a la aplicación publicada:
-**[https://019b8411-d43c-48a1-c68a-cf5c1db431c4.share.connect.posit.cloud/](https://019b8411-d43c-48a1-c68a-cf5c1db431c4.share.connect.posit.cloud/)**
+**[https://019b8b8e-6aa8-d81c-3d2d-e16a485a8585.share.connect.posit.cloud/](https://019b8b8e-6aa8-d81c-3d2d-e16a485a8585.share.connect.posit.cloud/)**
 
 ## 📋 Características
 
