@@ -108,7 +108,7 @@ muestreo/
 │                          #   - AAZ14Double: Plan doble de atributos (Z1.4)
 │                          #   - AAZ14Multiple: Plan múltiple de atributos (Z1.4)
 ├── DESCRIPTION            # Metadatos del paquete y dependencias
-├── LICENSE                # Licencia MIT
+├── LICENSE                # Licencia CC BY 4.0
 ├── README.md              # Este archivo
 │
 ├── tests/                 # Suite completa de testing
@@ -447,7 +447,6 @@ Para más ayuda, abre un issue en GitHub.
 
 - 📘 **TESTING_GUIDE.md** - Guía rápida de uso de tests
 - 📙 **tests/README.md** - Documentación completa de la batería de tests
-- 📗 **DEPLOY_CHECKLIST.md** - Lista de verificación para deployment
 - 📕 **TEST_SUMMARY.txt** - Resumen de cobertura y estadísticas
 
 ## 🎯 Roadmap
