@@ -450,12 +450,14 @@ server <- function(input, output, session) {
          ylim = c(0, 1))
     grid()
     
-    # Gráfico 2: Curva ASN
+    # Gráfico 2: Curva ASN (con rango dinámico)
+    asn_range <- range(OCASNS$ASN, na.rm = TRUE)
+    ylim_asn <- c(max(1, asn_range[1] * 0.8), asn_range[2] * 1.2)
     plot(OCASNS$pd, OCASNS$ASN, type = "l", lwd = 2, col = "#1b9aaa",
          xlab = "Proporción no conforme",
          ylab = "Tamaño promedio de muestra",
          main = "Curva ASN",
-         ylim = c(50, 200))
+         ylim = ylim_asn)
     grid()
   }, height = 420, width = 780)
 }
