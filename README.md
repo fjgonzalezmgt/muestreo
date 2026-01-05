@@ -60,6 +60,10 @@ Accede a la aplicación publicada:
 - **AcceptanceSampling** (>= 1.0-6) - Implementación de algoritmos de muestreo por aceptación según normas ANSI/ASQ
 - **testthat** (>= 3.0.0) - Framework de testing unitario con 138+ tests
 
+### Atribución de código
+
+Las funciones de cálculo de planes de muestreo en el archivo `aql_functions.R` fueron adaptadas del paquete [AQLSchemes](https://cran.r-project.org/web/packages/AQLSchemes/index.html) disponible en CRAN. Estas funciones se modificaron y optimizaron para su integración con la interfaz Shiny de esta aplicación, manteniendo la fidelidad a los estándares ANSI/ASQ Z1.4 y Z1.9.
+
 ## 📦 Instalación local
 
 ### Requisitos previos
@@ -107,6 +111,8 @@ muestreo/
 │                          #   - AAZ14Single: Plan simple de atributos (Z1.4)
 │                          #   - AAZ14Double: Plan doble de atributos (Z1.4)
 │                          #   - AAZ14Multiple: Plan múltiple de atributos (Z1.4)
+│                          # Nota: Funciones adaptadas del paquete AQLSchemes
+│                          #   https://cran.r-project.org/web/packages/AQLSchemes/
 ├── DESCRIPTION            # Metadatos del paquete y dependencias
 ├── LICENSE                # Licencia CC BY 4.0
 ├── README.md              # Este archivo
@@ -135,7 +141,7 @@ muestreo/
 | `ui.R` | Interfaz de usuario con Bootstrap 5 | ~200 |
 | `server.R` | Lógica del servidor y renderizado | ~475 |
 | `global.R` | 8 catálogos de datos + helper functions | ~250 |
-| `aql_functions.R` | 4 funciones principales de cálculo | ~400 |
+| `aql_functions.R` | 4 funciones principales de cálculo (adaptadas de [AQLSchemes](https://cran.r-project.org/web/packages/AQLSchemes/)) | ~400 |
 
 ### Archivos de testing
 
