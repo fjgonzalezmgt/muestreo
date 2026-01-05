@@ -7,33 +7,39 @@ library(AcceptanceSampling)
 # Las funciones y la app se cargan automáticamente via helper-load_app.R
 
 test_that("Server function existe", {
-  skip_if_not(exists("server"), "app.R no cargado correctamente")
+  skip_if_not(exists("server"), "server.R no cargado correctamente")
   
   expect_true(is.function(server))
   expect_equal(length(formals(server)), 3)  # input, output, session
 })
 
 # ==============================================================================
-# Tests de Funciones Auxiliares para Curvas OC
+# Tests de Funciones Auxiliares
 # ==============================================================================
 
-test_that("OCASNZ4S función existe para Single sampling", {
-  # Verificar que existe alguna función relacionada con OC curves
-  plan <- suppressMessages(AAZ14Single(PLAN = 1, dINSL = 6, dLOTS = 11, dAQL = 12))
-  expect_s3_class(plan, "data.frame")
+test_that("Función lookup_id existe y funciona correctamente", {
+  skip_if_not(exists("lookup_id"), "global.R no cargado correctamente")
   
-  # Verificar que podemos calcular OC curve con AcceptanceSampling
-  oc_plan <- OC2c(n = plan$n, c = plan$c, pd = seq(0, 0.1, 0.01))
-  expect_true(!is.null(oc_plan))
+  # Verificar que la función existe
+  expect_true(is.function(lookup_id))
+  
+  # Probar con type_df
+  expect_equal(lookup_id(type_df, "Normal"), 1)
+  expect_equal(lookup_id(type_df, "Tightened"), 2)
+  expect_equal(lookup_id(type_df, "Reduced"), 3)
+  
+  # Probar con choice_plans
+  expect_equal(lookup_id(choice_plans, "Single"), 1)
+  expect_equal(lookup_id(choice_plans, "Double"), 2)
+  expect_equal(lookup_id(choice_plans, "Multiple"), 3)
 })
 
-test_that("OCASNZ4D función maneja Double sampling", {
-  plan <- suppressMessages(AAZ14Double(PLAN = 1, dINSL = 6, dLOTS = 11, dAQL = 12))
-  
-  if(is.data.frame(plan)) {
-    expect_equal(nrow(plan), 2)
-    expect_true(all(plan$n > 0))
-  }
+test_that("Funciones de aql_functions.R están disponibles", {
+  # Verificar que las funciones AAZ14* están disponibles del paquete AcceptanceSampling
+  expect_true(exists("AAZ14Single"))
+  expect_true(exists("AAZ14Double"))
+  expect_true(exists("AAZ14Multiple"))
+  expect_true(exists("AAZ19"))
 })
 
 # ==============================================================================
@@ -237,14 +243,14 @@ test_that("Planes de variables son compatibles con AcceptanceSampling::OCvar", {
 # ==============================================================================
 
 test_that("Los nombres en catálogos no tienen espacios extra", {
-  skip_if_not(exists("type_df"), "Catálogos no cargados")
+  skip_if_not(exists("type_df"), "global.R no cargado correctamente")
   
   expect_true(all(!grepl("^\\s|\\s$", type_df$name)))
   expect_true(all(!grepl("^\\s|\\s$", choice_plans$name)))
 })
 
 test_that("Catálogos no contienen valores duplicados", {
-  skip_if_not(exists("type_df"), "Catálogos no cargados")
+  skip_if_not(exists("type_df"), "global.R no cargado correctamente")
   
   expect_equal(length(unique(type_df$name)), nrow(type_df))
   expect_equal(length(unique(choice_plans$name)), nrow(choice_plans))

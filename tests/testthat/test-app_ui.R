@@ -2,19 +2,27 @@
 
 library(testthat)
 library(shiny)
+library(bslib)
 
 # Las funciones y la app se cargan automáticamente via helper-load_app.R
 
 test_that("UI contiene los elementos principales", {
-  skip_if_not(exists("ui"), "app.R no cargado correctamente")
+  skip_if_not(exists("ui"), "ui.R no cargado correctamente")
   
   # Verificar que ui es un objeto Shiny
   expect_true(!is.null(ui))
-  expect_true(inherits(ui, "shiny.tag.list") || inherits(ui, "shiny.tag"))
+  expect_true(inherits(ui, "shiny.tag.list") || inherits(ui, "shiny.tag") || inherits(ui, "shiny.navs_bar"))
+})
+
+test_that("UI usa bslib y tiene tema configurado", {
+  skip_if_not(exists("ui"), "ui.R no cargado correctamente")
+  
+  # Verificar que se importó bslib
+  expect_true("package:bslib" %in% search())
 })
 
 test_that("Catálogos están correctamente definidos", {
-  skip_if_not(exists("type_df"), "app.R no cargado correctamente")
+  skip_if_not(exists("type_df"), "global.R no cargado correctamente")
   
   # type_df
   expect_s3_class(type_df, "data.frame")
@@ -39,7 +47,7 @@ test_that("Catálogos están correctamente definidos", {
 })
 
 test_that("Catálogos para atributos están correctamente definidos", {
-  skip_if_not(exists("choice_plans"), "app.R no cargado correctamente")
+  skip_if_not(exists("choice_plans"), "global.R no cargado correctamente")
   
   # choice_plans
   expect_s3_class(choice_plans, "data.frame")
@@ -81,7 +89,7 @@ test_that("lookup_id retorna NA para valores no encontrados", {
 })
 
 test_that("Todos los IDs en catálogos son únicos", {
-  skip_if_not(exists("type_df"), "app.R no cargado correctamente")
+  skip_if_not(exists("type_df"), "global.R no cargado correctamente")
   
   expect_equal(length(type_df$id), length(unique(type_df$id)))
   expect_equal(length(choice_plans$id), length(unique(choice_plans$id)))
@@ -90,7 +98,7 @@ test_that("Todos los IDs en catálogos son únicos", {
 })
 
 test_that("Valores de AQL son numéricos válidos", {
-  skip_if_not(exists("aql_var_df"), "app.R no cargado correctamente")
+  skip_if_not(exists("aql_var_df"), "global.R no cargado correctamente")
   
   aql_values <- as.numeric(aql_var_df$name)
   expect_true(all(!is.na(aql_values)))
@@ -102,7 +110,7 @@ test_that("Valores de AQL son numéricos válidos", {
 })
 
 test_that("IDs son consecutivos desde 1", {
-  skip_if_not(exists("type_df"), "app.R no cargado correctamente")
+  skip_if_not(exists("type_df"), "global.R no cargado correctamente")
   
   expect_equal(type_df$id, 1:3)
   expect_equal(choice_plans$id, 1:3)

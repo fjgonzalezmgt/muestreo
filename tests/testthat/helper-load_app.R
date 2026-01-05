@@ -33,26 +33,62 @@ if (!is.null(aql_path)) {
   })
 }
 
-# Cargar app.R desde su directorio para que encuentre aql_functions.R
-app_path <- find_file("app.R")
-if (!is.null(app_path)) {
+# Cargar archivos de la aplicación Shiny (global.R, ui.R, server.R)
+# Primero global.R con las definiciones globales
+global_path <- find_file("global.R")
+if (!is.null(global_path)) {
   tryCatch({
-    # Cambiar al directorio de app.R temporalmente
-    app_dir <- dirname(app_path)
-    setwd(app_dir)
+    global_dir <- dirname(global_path)
+    setwd(global_dir)
     
-    # Suprimir mensajes de carga
     suppressMessages({
-      source(basename(app_path), local = FALSE)
+      source(basename(global_path), local = FALSE)
     })
     
-    # Restaurar directorio original
+    cat("✓ global.R cargado correctamente\n")
+  }, error = function(e) {
+    setwd(old_wd)
+    warning(paste("Error cargando global.R:", e$message))
+  })
+}
+
+# Luego ui.R
+ui_path <- find_file("ui.R")
+if (!is.null(ui_path)) {
+  tryCatch({
+    ui_dir <- dirname(ui_path)
+    setwd(ui_dir)
+    
+    suppressMessages({
+      source(basename(ui_path), local = FALSE)
+    })
+    
+    cat("✓ ui.R cargado correctamente\n")
+  }, error = function(e) {
+    setwd(old_wd)
+    warning(paste("Error cargando ui.R:", e$message))
+  })
+}
+
+# Finalmente server.R
+server_path <- find_file("server.R")
+if (!is.null(server_path)) {
+  tryCatch({
+    server_dir <- dirname(server_path)
+    setwd(server_dir)
+    
+    suppressMessages({
+      source(basename(server_path), local = FALSE)
+    })
+    
     setwd(old_wd)
     
-    cat("✓ app.R cargado correctamente\n")
+    cat("✓ server.R cargado correctamente\n")
   }, error = function(e) {
-    # Restaurar directorio en caso de error
     setwd(old_wd)
-    warning(paste("Error cargando app.R:", e$message))
+    warning(paste("Error cargando server.R:", e$message))
   })
+} else {
+  # Restaurar directorio si no se encontró server.R
+  setwd(old_wd)
 }
