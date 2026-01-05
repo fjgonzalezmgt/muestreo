@@ -13,7 +13,7 @@ Desarrollada por **Quality Analytics** para facilitar la implementación de sist
 ## 🌐 Demo en vivo
 
 Accede a la aplicación publicada:
-**[https://019b8e3b-4780-93f2-5324-9c64bc8a95f4.share.connect.posit.cloud/](https://019b8e3b-4780-93f2-5324-9c64bc8a95f4.share.connect.posit.cloud/)**
+**[https://019b8e74-1e2f-e211-efbc-c9f5543838c0.share.connect.posit.cloud/](https://019b8e74-1e2f-e211-efbc-c9f5543838c0.share.connect.posit.cloud/)**
 
 ## ✨ Características
 
@@ -277,7 +277,7 @@ Esta aplicación implementa los procedimientos y tablas de las siguientes normas
 
 ### Repositorio
 - 🔗 GitHub: [fjgonzalezmgt/muestreo](https://github.com/fjgonzalezmgt/muestreo)
-- 🚀 Demo: [Posit Connect Cloud](https://019b8e3b-4780-93f2-5324-9c64bc8a95f4.share.connect.posit.cloud/)
+- 🚀 Demo: [Posit Connect Cloud](https://019b8e74-1e2f-e211-efbc-c9f5543838c0.share.connect.posit.cloud/)
 
 ## 📝 Licencia
 
