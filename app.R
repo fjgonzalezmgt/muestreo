@@ -121,7 +121,15 @@ ui <- page_navbar(
           "Plan",
           h4("Plan de muestreo por variables"),
           tableOutput("var_planSummary"),
-          verbatimTextOutput("var_samplingOut")
+          div(
+            class = "helper-text mt-3",
+            tags$strong("Significado de los parámetros:"),
+            tags$ul(
+              tags$li(tags$strong("n:"), " Tamaño de muestra"),
+              tags$li(tags$strong("k:"), " Constante de aceptabilidad"),
+              tags$li(tags$strong("M:"), " Máxima proporción no conforme permitida")
+            )
+          )
         ),
         nav_panel(
           "Curvas",
@@ -151,7 +159,15 @@ ui <- page_navbar(
           "Plan",
           h4("Plan de muestreo por atributos (ANSI/ASQ Z1.4)"),
           tableOutput("attr_plan_table"),
-          verbatimTextOutput("attr_plan_text")
+          div(
+            class = "helper-text mt-3",
+            tags$strong("Significado de los parámetros:"),
+            tags$ul(
+              tags$li(tags$strong("n:"), " Tamaño de muestra"),
+              tags$li(tags$strong("c:"), " Número de aceptación (defectos permitidos para aceptar)"),
+              tags$li(tags$strong("r:"), " Número de rechazo (defectos que causan rechazo del lote)")
+            )
+          )
         ),
         nav_panel(
           "Curvas",
@@ -211,15 +227,7 @@ server <- function(input, output, session) {
     df
   }, striped = TRUE, bordered = TRUE, digits = 5)
   
-  output$var_samplingOut <- renderPrint({
-    plan <- var_plan_var()
-    validate(need(!is.null(plan), ""))
-    writeLines("Sample size (n), Acceptability constant (k) and maximum proportion nonconforming (M)")
-    # Redondear n a entero para visualización
-    plan_display <- plan
-    plan_display["n"] <- as.integer(round(plan["n"], 0))
-    print(plan_display)
-  })
+
   
   output$download_var_plan <- downloadHandler(
     filename = function() "sampling_plan_variables.csv",
@@ -282,14 +290,11 @@ server <- function(input, output, session) {
     bordered = FALSE,
     hover = TRUE,
     spacing = "s",
-    digits = 5
+    digits = 5,
+    rownames = TRUE
   )
   
-  output$attr_plan_text <- renderPrint({
-    df <- attr_plan_data()
-    writeLines("Sample size (n), Acceptance number (c), Rejection number (r)")
-    print(df)
-  })
+
   
   output$download_attr_plan <- downloadHandler(
     filename = function() {
