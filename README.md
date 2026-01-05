@@ -124,7 +124,6 @@ muestreo/
 ├── run_tests.R            # Script interactivo para ejecutar tests
 ├── TESTING_GUIDE.md       # Guía rápida de testing
 ├── TEST_SUMMARY.txt       # Resumen de cobertura de tests
-├── DEPLOY_CHECKLIST.md    # Checklist pre-deployment
 │
 └── rsconnect/             # Configuración de despliegue en Posit Connect
 ```
