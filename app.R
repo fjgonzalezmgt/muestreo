@@ -431,7 +431,8 @@ server <- function(input, output, session) {
       return()
     }
     
-    par(mfcol = c(1, 2))
+    # Crear gráficos lado a lado
+    par(mfcol = c(1, 2), mar = c(4, 4, 3, 2))
     plans <- samplePlan
     Pnc <- seq(0, .08, .005)
     
@@ -441,10 +442,21 @@ server <- function(input, output, session) {
                      `3` = OCASNZ4M(plans, Pnc)
     )
     
-    plot(OCASNS$pd, OCASNS$OC, type = "l", xlab = "Proportion Nonconforming", ylab = "OC Curves",
-         main = "OC - ASN Curves", lty = 1)
-    plot(OCASNS$pd, OCASNS$ASN, type = "l", lty = 1, xlab = "Proportion Nonconforming",
-         ylab = "ASN Curves", ylim = c(50, 200))
+    # Gráfico 1: Curva OC
+    plot(OCASNS$pd, OCASNS$OC, type = "l", lwd = 2, col = "#0c5f7e",
+         xlab = "Proporción no conforme", 
+         ylab = "Probabilidad de aceptación",
+         main = "Curva OC", 
+         ylim = c(0, 1))
+    grid()
+    
+    # Gráfico 2: Curva ASN
+    plot(OCASNS$pd, OCASNS$ASN, type = "l", lwd = 2, col = "#1b9aaa",
+         xlab = "Proporción no conforme",
+         ylab = "Tamaño promedio de muestra",
+         main = "Curva ASN",
+         ylim = c(50, 200))
+    grid()
   }, height = 420, width = 780)
 }
 
