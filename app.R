@@ -133,7 +133,11 @@ ui <- page_navbar(
         ),
         nav_panel(
           "Curvas",
-          plotOutput("var_samplingPlot", height = 400)
+          layout_columns(
+            col_widths = c(12, 12, 12, 12, 12, 6, 6),
+            plotOutput("var_oc_plot", height = 400),
+            plotOutput("var_asn_plot", height = 400)
+          )
         )
       )
     )
@@ -171,7 +175,11 @@ ui <- page_navbar(
         ),
         nav_panel(
           "Curvas",
-          plotOutput("attr_samplingPlot", height = 420)
+          layout_columns(
+            col_widths = c(12, 12, 12, 12, 12, 6, 6),
+            plotOutput("attr_oc_plot", height = 420),
+            plotOutput("attr_asn_plot", height = 420)
+          )
         )
       )
     )
@@ -260,7 +268,7 @@ server <- function(input, output, session) {
     }
   )
   
-  output$var_samplingPlot <- renderPlot({
+  var_oc_data <- reactive({
     planv <- var_plan_var()
     validate(need(!is.null(planv), "No hay datos del plan"))
     
@@ -275,26 +283,31 @@ server <- function(input, output, session) {
     n_val <- as.numeric(planv[[1]])
     ASNV <- rep(n_val, length(Pnc))
     
-    # Crear gráficos lado a lado
-    par(mfcol = c(1, 2), mar = c(4, 4, 3, 2))
+    list(Pnc = Pnc, OCV = OCV, ASNV = ASNV, n_val = n_val)
+  })
+  
+  output$var_oc_plot <- renderPlot({
+    data <- var_oc_data()
     
-    # Gráfico 1: Curva OC
-    plot(Pnc, OCV, type = "l", lwd = 2, col = "#0c5f7e",
+    plot(data$Pnc, data$OCV, type = "l", lwd = 2, col = "#0c5f7e",
          xlab = "Proporción no conforme", 
          ylab = "Probabilidad de aceptación",
          main = "Curva OC", 
          ylim = c(0, 1))
     grid()
+  })
+  
+  output$var_asn_plot <- renderPlot({
+    data <- var_oc_data()
     
-    # Gráfico 2: ASN (constante para muestreo por variables)
-    ylim_range <- c(max(1, n_val * 0.8), n_val * 1.2)
-    plot(Pnc, ASNV, type = "l", lwd = 2, col = "#1b9aaa",
+    ylim_range <- c(max(1, data$n_val * 0.8), data$n_val * 1.2)
+    plot(data$Pnc, data$ASNV, type = "l", lwd = 2, col = "#1b9aaa",
          xlab = "Proporción no conforme",
          ylab = "Tamaño promedio de muestra",
          main = "Curva ASN",
          ylim = ylim_range)
-    abline(h = n_val, lty = 2, col = "gray50")
-    text(0.04, n_val * 1.1, paste0("n = ", n_val), col = "gray30")
+    abline(h = data$n_val, lty = 2, col = "gray50")
+    text(0.04, data$n_val * 1.1, paste0("n = ", data$n_val), col = "gray30")
     grid()
   })
   
@@ -333,7 +346,7 @@ server <- function(input, output, session) {
     bordered = FALSE,
     hover = TRUE,
     spacing = "s",
-    digits = 5,
+    digits = 0,
     rownames = TRUE
   )
   
@@ -412,7 +425,7 @@ server <- function(input, output, session) {
     }
   )
   
-  output$attr_samplingPlot <- renderPlot({
+  attr_curves_data <- reactive({
     idPlan <- lookup_id(choice_plans, input$attr_plan)
     idType <- lookup_id(type_df, input$attr_type)
     idLevel <- lookup_id(choice_levels, input$attr_level)
@@ -426,40 +439,55 @@ server <- function(input, output, session) {
     )
     
     if (is.character(samplePlan)) {
-      plot.new()
-      text(0.5, 0.5, samplePlan, cex = 1.2)
-      return()
+      return(list(error = samplePlan))
     }
     
-    # Crear gráficos lado a lado
-    par(mfcol = c(1, 2), mar = c(4, 4, 3, 2))
-    plans <- samplePlan
     Pnc <- seq(0, .08, .005)
     
     OCASNS <- switch(idPlan,
-                     `1` = OCASNZ4S(plans, Pnc),
-                     `2` = OCASNZ4D(plans, Pnc),
-                     `3` = OCASNZ4M(plans, Pnc)
+                     `1` = OCASNZ4S(samplePlan, Pnc),
+                     `2` = OCASNZ4D(samplePlan, Pnc),
+                     `3` = OCASNZ4M(samplePlan, Pnc)
     )
     
-    # Gráfico 1: Curva OC
-    plot(OCASNS$pd, OCASNS$OC, type = "l", lwd = 2, col = "#0c5f7e",
+    list(OCASNS = OCASNS, error = NULL)
+  })
+  
+  output$attr_oc_plot <- renderPlot({
+    data <- attr_curves_data()
+    
+    if (!is.null(data$error)) {
+      plot.new()
+      text(0.5, 0.5, data$error, cex = 1.2)
+      return()
+    }
+    
+    plot(data$OCASNS$pd, data$OCASNS$OC, type = "l", lwd = 2, col = "#0c5f7e",
          xlab = "Proporción no conforme", 
          ylab = "Probabilidad de aceptación",
          main = "Curva OC", 
          ylim = c(0, 1))
     grid()
+  })
+  
+  output$attr_asn_plot <- renderPlot({
+    data <- attr_curves_data()
     
-    # Gráfico 2: Curva ASN (con rango dinámico)
-    asn_range <- range(OCASNS$ASN, na.rm = TRUE)
+    if (!is.null(data$error)) {
+      plot.new()
+      text(0.5, 0.5, data$error, cex = 1.2)
+      return()
+    }
+    
+    asn_range <- range(data$OCASNS$ASN, na.rm = TRUE)
     ylim_asn <- c(max(1, asn_range[1] * 0.8), asn_range[2] * 1.2)
-    plot(OCASNS$pd, OCASNS$ASN, type = "l", lwd = 2, col = "#1b9aaa",
+    plot(data$OCASNS$pd, data$OCASNS$ASN, type = "l", lwd = 2, col = "#1b9aaa",
          xlab = "Proporción no conforme",
          ylab = "Tamaño promedio de muestra",
          main = "Curva ASN",
          ylim = ylim_asn)
     grid()
-  }, height = 420, width = 780)
+  })
 }
 
 # Create a Shiny app object ----------------------------------------------------
