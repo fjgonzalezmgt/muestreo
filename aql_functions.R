@@ -1876,6 +1876,52 @@ AAZ14Multiple<-function(PLAN,dINSL,dLOTS,dAQL){
 }
 }
 
+#' Operating Characteristic (OC) Curve for Single Sampling Plans
+#'
+#' Calcula la curva característica de operación (OC) y el tamaño promedio de 
+#' muestra (ASN) para planes de muestreo simple según MIL-STD-105E ANSI/ASQ Z1.4.
+#'
+#' @param plan Data frame con el plan de muestreo simple, conteniendo las columnas:
+#'   \itemize{
+#'     \item \code{n} - Tamaño de muestra
+#'     \item \code{c} - Número de aceptación
+#'     \item \code{r} - Número de rechazo
+#'   }
+#'   Típicamente generado por \code{\link{AAZ14Single}}.
+#' @param pd Vector numérico de probabilidades de defecto (proporción, entre 0 y 1) 
+#'   para las cuales se calculará la probabilidad de aceptación.
+#'
+#' @return Un data frame con tres columnas:
+#'   \itemize{
+#'     \item \code{pd} - Probabilidad de defecto (proporción)
+#'     \item \code{OC} - Probabilidad de aceptación del lote para cada valor de pd
+#'     \item \code{ASN} - Tamaño promedio de muestra (igual a n para muestreo simple)
+#'   }
+#'
+#' @details
+#' La curva OC muestra la probabilidad de aceptar un lote en función de su 
+#' calidad real (proporción de defectos). Es una herramienta fundamental para 
+#' evaluar el desempeño y riesgo de un plan de muestreo.
+#' 
+#' Para muestreo simple, el ASN siempre es igual al tamaño de muestra n, ya que 
+#' siempre se inspecciona una sola muestra del mismo tamaño.
+#'
+#' @examples
+#' \dontrun{
+#' # Generar plan de muestreo simple
+#' plan <- AAZ14Single(PLAN=1, dINSL=6, dLOTS=9, dAQL=11)
+#' 
+#' # Calcular curva OC para diferentes niveles de calidad
+#' pd <- seq(0, 0.10, by=0.005)
+#' oc_curve <- OCASNZ4S(plan, pd)
+#' 
+#' # Graficar curva OC
+#' plot(oc_curve$pd, oc_curve$OC, type="l", 
+#'      xlab="Proporción de defectos", ylab="Probabilidad de aceptación")
+#' }
+#'
+#' @seealso \code{\link{AAZ14Single}}, \code{\link{OCASNZ4D}}, \code{\link{OCASNZ4M}}
+#' @export
 OCASNZ4S<-function(plan,pd) {
   # Here is where the function OCASN starts
   x<-length(pd)
@@ -1899,8 +1945,61 @@ OCASNZ4S<-function(plan,pd) {
   data.frame(pd,OC,ASN)
 }
 
-
-
+#' Operating Characteristic (OC) Curve for Double Sampling Plans
+#'
+#' Calcula la curva característica de operación (OC) y el tamaño promedio de 
+#' muestra (ASN) para planes de muestreo doble según MIL-STD-105E ANSI/ASQ Z1.4.
+#'
+#' @param plan Data frame con el plan de muestreo doble, conteniendo dos filas 
+#'   (primera y segunda muestra) y las columnas:
+#'   \itemize{
+#'     \item \code{n} - Tamaño de cada muestra
+#'     \item \code{c} - Número de aceptación para cada etapa
+#'     \item \code{r} - Número de rechazo para cada etapa
+#'   }
+#'   Típicamente generado por \code{\link{AAZ14Double}}.
+#' @param pd Vector numérico de probabilidades de defecto (proporción, entre 0 y 1) 
+#'   para las cuales se calculará la probabilidad de aceptación.
+#'
+#' @return Un data frame con tres columnas:
+#'   \itemize{
+#'     \item \code{pd} - Probabilidad de defecto (proporción)
+#'     \item \code{OC} - Probabilidad de aceptación del lote para cada valor de pd
+#'     \item \code{ASN} - Tamaño promedio de muestra esperado
+#'   }
+#'
+#' @details
+#' En el muestreo doble, el ASN varía según la calidad del lote:
+#' \itemize{
+#'   \item Si la calidad es muy buena o muy mala, frecuentemente se decide con 
+#'     la primera muestra (ASN cercano a n1)
+#'   \item Si la calidad es intermedia, más frecuentemente se requiere la segunda 
+#'     muestra (ASN cercano a n1+n2)
+#' }
+#' 
+#' La función calcula las probabilidades usando la distribución binomial para 
+#' cada etapa del proceso de muestreo doble.
+#'
+#' @examples
+#' \dontrun{
+#' # Generar plan de muestreo doble
+#' plan <- AAZ14Double(PLAN=1, dINSL=6, dLOTS=9, dAQL=11)
+#' 
+#' # Calcular curva OC y ASN
+#' pd <- seq(0, 0.10, by=0.005)
+#' oc_curve <- OCASNZ4D(plan, pd)
+#' 
+#' # Graficar curva OC
+#' plot(oc_curve$pd, oc_curve$OC, type="l",
+#'      xlab="Proporción de defectos", ylab="Probabilidad de aceptación")
+#' 
+#' # Graficar ASN
+#' plot(oc_curve$pd, oc_curve$ASN, type="l",
+#'      xlab="Proporción de defectos", ylab="Tamaño promedio de muestra")
+#' }
+#'
+#' @seealso \code{\link{AAZ14Double}}, \code{\link{OCASNZ4S}}, \code{\link{OCASNZ4M}}
+#' @export
 OCASNZ4D<-function(plan,pd) {
 # Here is where the function OCASN starts
 x<-length(pd)
@@ -1955,8 +2054,74 @@ ASN<-P1*n[1]+P2*(n[1]+n[2])
 data.frame(pd,OC,ASN)
 }
 
-
-
+#' Operating Characteristic (OC) Curve for Multiple Sampling Plans
+#'
+#' Calcula la curva característica de operación (OC) y el tamaño promedio de 
+#' muestra (ASN) para planes de muestreo múltiple según MIL-STD-105E ANSI/ASQ Z1.4.
+#'
+#' @param plan Data frame con el plan de muestreo múltiple, conteniendo hasta siete 
+#'   filas (una por muestra) y las columnas:
+#'   \itemize{
+#'     \item \code{n} - Tamaño de cada muestra
+#'     \item \code{c} - Número de aceptación acumulado para cada etapa
+#'     \item \code{r} - Número de rechazo acumulado para cada etapa
+#'   }
+#'   Típicamente generado por \code{\link{AAZ14Multiple}}.
+#' @param pd Vector numérico de probabilidades de defecto (proporción, entre 0 y 1) 
+#'   para las cuales se calculará la probabilidad de aceptación.
+#'
+#' @return Un data frame con tres columnas:
+#'   \itemize{
+#'     \item \code{pd} - Probabilidad de defecto (proporción)
+#'     \item \code{OC} - Probabilidad de aceptación del lote para cada valor de pd
+#'     \item \code{ASN} - Tamaño promedio de muestra esperado
+#'   }
+#'
+#' @details
+#' El muestreo múltiple puede proporcionar el ASN más bajo de todos los tipos de 
+#' muestreo, especialmente cuando la calidad del lote es consistentemente muy buena 
+#' o muy mala.
+#' 
+#' La función calcula las probabilidades acumuladas a través de múltiples etapas 
+#' (hasta 7 muestras), considerando todas las posibles trayectorias de decisión.
+#' El ASN refleja el número esperado de unidades inspeccionadas, ponderado por 
+#' la probabilidad de decisión en cada etapa.
+#' 
+#' Valores especiales en el plan:
+#' \itemize{
+#'   \item \code{c} = -1: No es posible aceptar en esta etapa
+#'   \item \code{n} = -2: No existe plan de muestreo múltiple
+#' }
+#'
+#' @note
+#' Esta función maneja correctamente los casos especiales del muestreo múltiple,
+#' incluyendo valores negativos de números de aceptación en las primeras etapas.
+#'
+#' @examples
+#' \dontrun{
+#' # Generar plan de muestreo múltiple
+#' plan <- AAZ14Multiple(PLAN=1, dINSL=6, dLOTS=9, dAQL=11)
+#' 
+#' # Calcular curva OC y ASN
+#' pd <- seq(0, 0.10, by=0.005)
+#' oc_curve <- OCASNZ4M(plan, pd)
+#' 
+#' # Comparar ASN con muestreo simple y doble
+#' plan_s <- AAZ14Single(PLAN=1, dINSL=6, dLOTS=9, dAQL=11)
+#' plan_d <- AAZ14Double(PLAN=1, dINSL=6, dLOTS=9, dAQL=11)
+#' oc_s <- OCASNZ4S(plan_s, pd)
+#' oc_d <- OCASNZ4D(plan_d, pd)
+#' 
+#' plot(pd, oc_curve$ASN, type="l", col="blue",
+#'      xlab="Proporción de defectos", ylab="ASN")
+#' lines(pd, oc_s$ASN, col="red")
+#' lines(pd, oc_d$ASN, col="green")
+#' legend("topright", c("Múltiple", "Simple", "Doble"),
+#'        col=c("blue", "red", "green"), lty=1)
+#' }
+#'
+#' @seealso \code{\link{AAZ14Multiple}}, \code{\link{OCASNZ4S}}, \code{\link{OCASNZ4D}}
+#' @export
 OCASNZ4M<-function(plan,pd) {
 # Here is where the function OCASN starts
 x<-length(pd)
