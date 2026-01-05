@@ -195,25 +195,19 @@ server <- function(input, output, session) {
     )
   })
   
-  var_plan_attr <- reactive({
-    id_vals <- var_ids()
-    validate(need(!any(is.na(unlist(id_vals))), "Seleccione valores válidos"))
-    tryCatch(
-      AAZ14Single(PLAN = id_vals$type, dINSL = id_vals$level, dLOTS = id_vals$lot, dAQL = id_vals$aql),
-      error = function(e) {
-        showNotification("No se pudo calcular el plan de atributos", type = "error")
-        NULL
-      }
-    )
-  })
-  
   var_plan_var <- reactive({
     id_vals <- var_ids()
     validate(need(!any(is.na(unlist(id_vals))), "Seleccione valores válidos"))
     tryCatch(
-      AAZ19(type = id_vals$type, dINSL = id_vals$level, dLOTS = id_vals$lot, dAQL = id_vals$aql),
+      AAZ19(
+        type = id_vals$type, 
+        stype = "unknown",  # Desviación estándar desconocida (método estándar)
+        dINSL = id_vals$level, 
+        dLOTS = id_vals$lot, 
+        dAQL = id_vals$aql
+      ),
       error = function(e) {
-        showNotification("No se pudo calcular el plan por variables", type = "error")
+        showNotification(paste("Error al calcular plan por variables:", e$message), type = "error")
         NULL
       }
     )
@@ -267,25 +261,41 @@ server <- function(input, output, session) {
   )
   
   output$var_samplingPlot <- renderPlot({
-    plans <- var_plan_attr()
     planv <- var_plan_var()
-    validate(need(!is.null(plans), ""), need(!is.null(planv), ""))
+    validate(need(!is.null(planv), "No hay datos del plan"))
+    
+    # Definir rango de proporciones no conformes
     Pnc <- seq(0, 0.08, 0.005)
-    V <- OCvar(planv[[1]], planv[[2]], s.type = "unknown", pd = Pnc)
+    
+    # Calcular curva OC para muestreo por variables usando AcceptanceSampling
+    V <- OCvar(n = planv[[1]], k = planv[[2]], s.type = "unknown", pd = Pnc)
     OCV <- V@paccept
-    OCASNS <- OCASNZ4S(plans, Pnc)
-    ASNV <- rep(as.numeric(planv[[1]]), length(OCASNS$pd))
-    par(mfcol = c(1, 2))
-    plot(OCASNS$pd, OCV, type = "l", xlab = "Proportion Nonconforming", ylab = "OC Curves",
-         main = "OC - ASN Curves", lty = 1)
     
-    # Para muestreo por variables, n es constante
-    # Ajustar ylim para mejor visualización
+    # Para muestreo por variables, ASN siempre es n (tamaño de muestra constante)
     n_val <- as.numeric(planv[[1]])
-    ylim_range <- c(max(1, n_val * 0.5), n_val * 1.5)
+    ASNV <- rep(n_val, length(Pnc))
     
-    plot(OCASNS$pd, ASNV, type = "l", lty = 1, xlab = "Proportion Nonconforming",
-         ylab = "ASN Curves", ylim = ylim_range)
+    # Crear gráficos lado a lado
+    par(mfcol = c(1, 2), mar = c(4, 4, 3, 2))
+    
+    # Gráfico 1: Curva OC
+    plot(Pnc, OCV, type = "l", lwd = 2, col = "#0c5f7e",
+         xlab = "Proporción no conforme", 
+         ylab = "Probabilidad de aceptación",
+         main = "Curva OC", 
+         ylim = c(0, 1))
+    grid()
+    
+    # Gráfico 2: ASN (constante para muestreo por variables)
+    ylim_range <- c(max(1, n_val * 0.8), n_val * 1.2)
+    plot(Pnc, ASNV, type = "l", lwd = 2, col = "#1b9aaa",
+         xlab = "Proporción no conforme",
+         ylab = "Tamaño promedio de muestra",
+         main = "Curva ASN",
+         ylim = ylim_range)
+    abline(h = n_val, lty = 2, col = "gray50")
+    text(0.04, n_val * 1.1, paste0("n = ", n_val), col = "gray30")
+    grid()
   })
   
   # ===========================================================================
