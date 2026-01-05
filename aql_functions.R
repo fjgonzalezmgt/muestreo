@@ -1,3 +1,44 @@
+#' ANSI/ASQ Z1.9 Sampling Plans (Variables)
+#'
+#' Genera planes de muestreo por variables según el estándar ANSI/ASQ Z1.9, 
+#' convertido desde MIL-STD-414 usando el Método Gasciogne.
+#'
+#' @param type Tipo de inspección: "Normal", "Tightened", o "Reduced". 
+#'   También acepta valores numéricos 1-3. Por defecto "Normal".
+#' @param stype Tipo de desviación estándar: "unknown" (desconocida) o "known" (conocida). 
+#'   Por defecto "unknown".
+#' @param dINSL Nivel de inspección. Índice numérico del 1-5 correspondiente a 
+#'   c("S-3","S-4","I","II","III").
+#' @param dLOTS Tamaño del lote. Índice numérico del 1-16 correspondiente a los 
+#'   rangos de tamaño de lote definidos en el estándar.
+#' @param dAQL Nivel de calidad aceptable (AQL). Índice numérico del 1-11 
+#'   correspondiente a los valores de AQL disponibles.
+#'
+#' @return Un vector nombrado con tres elementos:
+#'   \itemize{
+#'     \item \code{n} - Tamaño de muestra requerido
+#'     \item \code{k} - Constante de aceptabilidad
+#'     \item \code{M} - Calidad máxima permitida del lote (proporción)
+#'   }
+#'
+#' @details
+#' Esta función implementa planes de muestreo por variables según ANSI/ASQ Z1.9.
+#' Soporta dos casos:
+#' \itemize{
+#'   \item Desviación estándar desconocida (\code{stype="unknown"}): utiliza el 
+#'     método del rango para estimar la variabilidad
+#'   \item Desviación estándar conocida (\code{stype="known"}): asume que la 
+#'     desviación estándar del proceso es conocida
+#' }
+#'
+#' @examples
+#' \dontrun{
+#' # Plan de inspección normal, desviación desconocida
+#' plan <- AAZ19(type="Normal", stype="unknown", dINSL=3, dLOTS=8, dAQL=6)
+#' print(plan)
+#' }
+#'
+#' @export
 AAZ19<-function(type="Normal",stype="unknown",dINSL,dLOTS,dAQL){
   newvalue<-NULL
   op <- options(changedop=newvalue)
@@ -205,6 +246,47 @@ while(stype=="known") {
 stype="done" }
 }
 
+#' MIL-STD-105E ANSI/ASQ Z1.4 Single Sampling Plans
+#'
+#' Genera planes de muestreo simple por atributos según el estándar 
+#' MIL-STD-105E ANSI/ASQ Z1.4.
+#'
+#' @param PLAN Tipo de plan de inspección:
+#'   \itemize{
+#'     \item 1 - Normal
+#'     \item 2 - Tightened (Estricto)
+#'     \item 3 - Reduced (Reducido)
+#'   }
+#' @param dINSL Nivel de inspección. Índice numérico del 1-7 correspondiente a 
+#'   c("S-1","S-2","S-3","S-4","I","II","III").
+#' @param dLOTS Tamaño del lote. Índice numérico del 1-15 correspondiente a los 
+#'   rangos de tamaño de lote definidos en el estándar.
+#' @param dAQL Nivel de calidad aceptable (AQL). Índice numérico del 1-26 
+#'   correspondiente a los valores de AQL desde 0.010 hasta 1000.
+#'
+#' @return Un data frame con una fila y tres columnas:
+#'   \itemize{
+#'     \item \code{n} - Tamaño de muestra
+#'     \item \code{c} - Número de aceptación (máximo de defectos permitidos)
+#'     \item \code{r} - Número de rechazo (mínimo de defectos para rechazar)
+#'   }
+#'
+#' @details
+#' Si el tamaño de muestra excede el tamaño del lote, se debe realizar 
+#' inspección 100\%.
+#'
+#' El plan single sampling inspecciona una sola muestra y toma una decisión 
+#' de aceptar o rechazar el lote basándose en el número de defectos encontrados.
+#'
+#' @examples
+#' \dontrun{
+#' # Plan de inspección normal, nivel II, lote de 501-1200, AQL 1.0
+#' plan <- AAZ14Single(PLAN=1, dINSL=6, dLOTS=9, dAQL=11)
+#' print(plan)
+#' }
+#'
+#' @seealso \code{\link{AAZ14Double}}, \code{\link{AAZ14Multiple}}
+#' @export
 AAZ14Single<-function(PLAN,dINSL,dLOTS,dAQL){
 message("MIL-STD-105E ANSI/ASQ Z1.4")
 message("If the sample size exceeds the lot size, carry out 100% inspection")
@@ -515,15 +597,57 @@ message("If the sample size exceeds the lot size, carry out 100% inspection")
   return(plan)
 }
 
-
-
-
-
-
-
-
-
-
+#' MIL-STD-105E ANSI/ASQ Z1.4 Double Sampling Plans
+#'
+#' Genera planes de muestreo doble por atributos según el estándar 
+#' MIL-STD-105E ANSI/ASQ Z1.4.
+#'
+#' @param PLAN Tipo de plan de inspección:
+#'   \itemize{
+#'     \item 1 - Normal
+#'     \item 2 - Tightened (Estricto)
+#'     \item 3 - Reduced (Reducido)
+#'   }
+#' @param dINSL Nivel de inspección. Índice numérico del 1-7 correspondiente a 
+#'   c("S-1","S-2","S-3","S-4","I","II","III").
+#' @param dLOTS Tamaño del lote. Índice numérico del 1-15 correspondiente a los 
+#'   rangos de tamaño de lote definidos en el estándar.
+#' @param dAQL Nivel de calidad aceptable (AQL). Índice numérico del 1-26 
+#'   correspondiente a los valores de AQL desde 0.010 hasta 1000.
+#'
+#' @return Un data frame con dos filas (primera y segunda muestra) y tres columnas:
+#'   \itemize{
+#'     \item \code{n} - Tamaño de cada muestra
+#'     \item \code{c} - Número de aceptación para cada etapa
+#'     \item \code{r} - Número de rechazo para cada etapa
+#'   }
+#'   
+#'   Si no existe plan de muestreo doble para los parámetros dados, 
+#'   retorna un mensaje indicando que se use el plan de muestreo simple correspondiente.
+#'
+#' @details
+#' El muestreo doble permite tomar una decisión con la primera muestra si el 
+#' resultado es muy bueno o muy malo. Si el resultado es intermedio, se toma 
+#' una segunda muestra antes de decidir.
+#'
+#' En la primera muestra:
+#' \itemize{
+#'   \item Si defectos <= c[1]: Aceptar el lote
+#'   \item Si defectos >= r[1]: Rechazar el lote  
+#'   \item Si c[1] < defectos < r[1]: Tomar segunda muestra
+#' }
+#'
+#' Con la segunda muestra, se evalúa el total acumulado de defectos.
+#'
+#' @examples
+#' \dontrun{
+#' # Plan de inspección normal doble
+#' plan <- AAZ14Double(PLAN=1, dINSL=6, dLOTS=9, dAQL=11)
+#' print(plan)
+#' }
+#'
+#' @seealso \code{\link{AAZ14Single}}, \code{\link{AAZ14Multiple}}
+#' @export
 AAZ14Double<-function(PLAN,dINSL,dLOTS,dAQL){
   message("MIL-STD-105E ANSI/ASQ Z1.4")
   # Get the inspection level
@@ -850,6 +974,66 @@ letters<-c("A","A","A","A","A","A","B",
       return(plan)}
 }
 
+#' MIL-STD-105E ANSI/ASQ Z1.4 Multiple Sampling Plans
+#'
+#' Genera planes de muestreo múltiple por atributos según el estándar 
+#' MIL-STD-105E ANSI/ASQ Z1.4.
+#'
+#' @param PLAN Tipo de plan de inspección:
+#'   \itemize{
+#'     \item 1 - Normal
+#'     \item 2 - Tightened (Estricto)
+#'     \item 3 - Reduced (Reducido)
+#'   }
+#' @param dINSL Nivel de inspección. Índice numérico del 1-7 correspondiente a 
+#'   c("S-1","S-2","S-3","S-4","I","II","III").
+#' @param dLOTS Tamaño del lote. Índice numérico del 1-15 correspondiente a los 
+#'   rangos de tamaño de lote definidos en el estándar.
+#' @param dAQL Nivel de calidad aceptable (AQL). Índice numérico del 1-26 
+#'   correspondiente a los valores de AQL desde 0.010 hasta 1000.
+#'
+#' @return Un data frame con hasta siete filas (una por cada muestra posible) y 
+#'   tres columnas:
+#'   \itemize{
+#'     \item \code{n} - Tamaño de cada muestra
+#'     \item \code{Ac} - Número de aceptación acumulado para cada etapa
+#'     \item \code{Re} - Número de rechazo acumulado para cada etapa
+#'   }
+#'   
+#'   Los valores especiales indican:
+#'   \itemize{
+#'     \item -1: No es posible aceptar en esta etapa
+#'     \item -2: No existe plan de muestreo múltiple (usar plan simple)
+#'   }
+#'
+#' @details
+#' El muestreo múltiple extiende el concepto del muestreo doble permitiendo 
+#' hasta 7 muestras antes de tomar una decisión final. Esto puede reducir el 
+#' tamaño promedio de muestra cuando la calidad del lote es muy buena o muy mala.
+#'
+#' En cada etapa se evalúa el número acumulado de defectos:
+#' \itemize{
+#'   \item Si defectos acumulados <= Ac: Aceptar el lote
+#'   \item Si defectos acumulados >= Re: Rechazar el lote
+#'   \item Si Ac < defectos < Re: Continuar con la siguiente muestra
+#' }
+#'
+#' El proceso continúa hasta que se toma una decisión o se alcanzan las 7 muestras.
+#'
+#' @note 
+#' Los planes de muestreo múltiple no están disponibles para todas las 
+#' combinaciones de parámetros. Si el tamaño de muestra es -1 o -2, se debe 
+#' utilizar el plan de muestreo simple correspondiente.
+#'
+#' @examples
+#' \dontrun{
+#' # Plan de inspección normal múltiple
+#' plan <- AAZ14Multiple(PLAN=1, dINSL=6, dLOTS=9, dAQL=11)
+#' print(plan)
+#' }
+#'
+#' @seealso \code{\link{AAZ14Single}}, \code{\link{AAZ14Double}}
+#' @export
 AAZ14Multiple<-function(PLAN,dINSL,dLOTS,dAQL){
   message("MIL-STD-105E ANSI/ASQ Z1.4")
   # Get the inspection level
