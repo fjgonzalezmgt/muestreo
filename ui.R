@@ -1,7 +1,85 @@
-#
-# UI para aplicación Shiny unificada para planes de muestreo
-# Combina muestreo por variables (Z1.9) y por atributos (Z1.4)
-#
+#' Interfaz de Usuario para Calculadora de Planes de Muestreo
+#'
+#' @description
+#' Interfaz de usuario unificada de aplicación Shiny para planes de muestreo.
+#' Combina muestreo por variables (ANSI/ASQ Z1.9) y muestreo por atributos (ANSI/ASQ Z1.4).
+#'
+#' @details
+#' La UI consta de dos paneles principales:
+#' \describe{
+#'   \item{Variables (Z1.9)}{Panel de muestreo por variables con parámetros para tipo de muestra,
+#'   nivel de inspección, tamaño de lote y AQL. Muestra resumen del plan de muestreo y curvas OC/ASN.}
+#'   \item{Atributos (Z1.4)}{Panel de muestreo por atributos con parámetros para plan de muestreo,
+#'   tipo de muestra, nivel de inspección, tamaño de lote y AQL. Muestra resumen del plan de muestreo y curvas OC/ASN.}
+#' }
+#'
+#' @section Componentes de UI:
+#' \itemize{
+#'   \item Página con barra de navegación y tema personalizado usando bslib
+#'   \item Tarjetas de entrada de parámetros para cada método de muestreo
+#'   \item Paneles de resultados con pestañas mostrando:
+#'     \itemize{
+#'       \item Tablas resumen del plan
+#'       \item Curvas de Característica Operativa (OC)
+#'       \item Curvas de Número Promedio de Muestra (ASN)
+#'     }
+#'   \item Botones de descarga para exportar planes a CSV
+#' }
+#'
+#' @section Estilo:
+#' Utiliza Bootstrap 5 con tema Flatly y CSS personalizado para:
+#' \itemize{
+#'   \item Componentes de tarjeta con bordes redondeados y sombras
+#'   \item Esquema de color personalizado (primario: #0c5f7e, secundario: #1b9aaa)
+#'   \item Google Fonts: Inter e Inter Tight
+#'   \item Diseño responsivo con cuadrícula basada en columnas
+#' }
+#'
+#' @section Parámetros:
+#' \strong{Variables (Z1.9):}
+#' \itemize{
+#'   \item \code{var_type}: Tipo de muestreo (Normal, Tightened, Reduced)
+#'   \item \code{var_level}: Nivel de inspección
+#'   \item \code{var_lot_size}: Rango de tamaño de lote
+#'   \item \code{var_aql}: Nivel de Calidad Aceptable (porcentaje no conforme por 100)
+#' }
+#'
+#' \strong{Atributos (Z1.4):}
+#' \itemize{
+#'   \item \code{attr_plan}: Plan de muestreo (Single, Double, Multiple)
+#'   \item \code{attr_type}: Tipo de muestreo (Normal, Tightened, Reduced)
+#'   \item \code{attr_level}: Nivel de inspección
+#'   \item \code{attr_lot_size}: Rango de tamaño de lote
+#'   \item \code{attr_aql}: Nivel de Calidad Aceptable (porcentaje no conforme por 100)
+#' }
+#'
+#' @section Salidas:
+#' \strong{Panel de Variables:}
+#' \itemize{
+#'   \item \code{var_planSummary}: Tabla mostrando n (tamaño de muestra), k (constante de aceptabilidad), M (proporción máxima no conforme)
+#'   \item \code{var_oc_plot}: Curva de Característica Operativa
+#'   \item \code{var_asn_plot}: Curva de Número Promedio de Muestra
+#'   \item \code{download_var_plan}: Controlador de descarga para datos del plan
+#' }
+#'
+#' \strong{Panel de Atributos:}
+#' \itemize{
+#'   \item \code{attr_plan_table}: Tabla mostrando n (tamaño de muestra), c (número de aceptación), r (número de rechazo)
+#'   \item \code{attr_oc_plot}: Curva de Característica Operativa
+#'   \item \code{attr_asn_plot}: Curva de Número Promedio de Muestra
+#'   \item \code{download_attr_plan}: Controlador de descarga para datos del plan
+#' }
+#'
+#' @references
+#' \itemize{
+#'   \item ANSI/ASQ Z1.9: Procedimientos y Tablas de Muestreo para Inspección por Variables
+#'   \item ANSI/ASQ Z1.4: Procedimientos y Tablas de Muestreo para Inspección por Atributos
+#' }
+#'
+#' @seealso \code{\link{server}} para la lógica del lado del servidor
+#'
+#' @export
+#' @name ui
 
 # Load packages ----------------------------------------------------------------
 

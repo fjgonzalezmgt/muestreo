@@ -1,7 +1,44 @@
-#
-# Server para aplicación Shiny unificada para planes de muestreo
-# Combina muestreo por variables (Z1.9) y por atributos (Z1.4)
-#
+#' Servidor de Aplicación Shiny para Planes de Muestreo
+#'
+#' @description
+#' Servidor para aplicación Shiny unificada que implementa planes de muestreo
+#' basados en las normas ANSI/ASQ Z1.9 (muestreo por variables) y ANSI/ASQ Z1.4
+#' (muestreo por atributos). Proporciona herramientas interactivas para calcular
+#' planes de muestreo, generar curvas OC (Operating Characteristic) y ASN
+#' (Average Sample Number).
+#'
+#' @details
+#' El servidor maneja dos tipos principales de muestreo:
+#' \itemize{
+#'   \item \strong{Muestreo por Variables (Z1.9):} Para características medibles
+#'         con desviación estándar desconocida
+#'   \item \strong{Muestreo por Atributos (Z1.4):} Para características de tipo
+#'         pasa/no pasa, soportando planes simple, doble y múltiple
+#' }
+#'
+#' @section Funcionalidades Principales:
+#' \describe{
+#'   \item{Cálculo de Planes:}{Genera parámetros de muestreo según norma seleccionada}
+#'   \item{Curvas OC:}{Muestra probabilidad de aceptación vs proporción no conforme}
+#'   \item{Curvas ASN:}{Calcula tamaño promedio de muestra requerido}
+#'   \item{Exportación:}{Descarga de resultados en formato CSV compatible con Excel}
+#' }
+#'
+#' @param input Objeto de entrada de Shiny con los parámetros del usuario
+#' @param output Objeto de salida de Shiny para renderizar resultados
+#' @param session Objeto de sesión de Shiny
+#'
+#' @return No retorna valores directamente. Actualiza outputs reactivos y gestiona
+#'   la lógica del servidor de la aplicación Shiny.
+#'
+#' @import shiny
+#' @import AcceptanceSampling
+#'
+#' @note Requiere que el archivo \code{aql_functions.R} esté disponible en el
+#'   directorio de trabajo con las funciones auxiliares necesarias.
+#'
+#' @author Quality Analytics
+#' @keywords internal
 
 # Load packages ----------------------------------------------------------------
 
@@ -18,6 +55,14 @@ server <- function(input, output, session) {
   # SERVER LOGIC: VARIABLES (Z1.9)
   # ===========================================================================
   
+  #' Reactivo para IDs de parámetros de muestreo por variables
+  #'
+  #' @description
+  #' Transforma las selecciones del usuario en IDs numéricos para las funciones
+  #' de muestreo por variables según la norma Z1.9.
+  #'
+  #' @return Lista con IDs de tipo, nivel, lote y AQL
+  #' @keywords internal
   var_ids <- reactive({
     list(
       type = type_df$id[match(input$var_type, type_df$name)],
@@ -27,6 +72,14 @@ server <- function(input, output, session) {
     )
   })
   
+  #' Reactivo para calcular plan de muestreo por variables
+  #'
+  #' @description
+  #' Calcula el plan de muestreo por variables usando la función AAZ19 del
+  #' paquete AcceptanceSampling. Asume desviación estándar desconocida.
+  #'
+  #' @return Objeto con parámetros del plan (n, k, M) o NULL si hay error
+  #' @keywords internal
   var_plan_var <- reactive({
     id_vals <- var_ids()
     validate(need(!any(is.na(unlist(id_vals))), "Seleccione valores válidos"))
@@ -45,6 +98,14 @@ server <- function(input, output, session) {
     )
   })
   
+  #' Renderiza tabla resumen del plan de muestreo por variables
+  #'
+  #' @description
+  #' Genera tabla formateada con los parámetros del plan: tamaño de muestra (n),
+  #' constante de aceptabilidad (k) y límite de máxima desviación estándar (M).
+  #'
+  #' @return Tabla HTML renderizada con formato
+  #' @keywords internal
   output$var_planSummary <- renderTable({
     plan <- var_plan_var()
     validate(need(!is.null(plan), ""))
@@ -66,6 +127,15 @@ server <- function(input, output, session) {
   
 
   
+  #' Manejador de descarga para plan de muestreo por variables
+  #'
+  #' @description
+  #' Exporta el plan de muestreo por variables en formato CSV con codificación
+  #' UTF-8 BOM para compatibilidad con Excel. Incluye parámetros de entrada
+  #' y resultados del plan.
+  #'
+  #' @return Archivo CSV descargable
+  #' @keywords internal
   output$download_var_plan <- downloadHandler(
     filename = function() "sampling_plan_variables.csv",
     content = function(file) {
@@ -103,6 +173,15 @@ server <- function(input, output, session) {
     }
   )
   
+  #' Reactivo para datos de curvas OC y ASN (variables)
+  #'
+  #' @description
+  #' Calcula la curva de características operativas (OC) y el tamaño promedio
+  #' de muestra (ASN) para el plan de muestreo por variables. Evalúa la
+  #' probabilidad de aceptación en un rango de proporciones no conformes.
+  #'
+  #' @return Lista con vectores Pnc, OCV, ASNV y valor n
+  #' @keywords internal
   var_oc_data <- reactive({
     planv <- var_plan_var()
     validate(need(!is.null(planv), "No hay datos del plan"))
@@ -121,6 +200,15 @@ server <- function(input, output, session) {
     list(Pnc = Pnc, OCV = OCV, ASNV = ASNV, n_val = n_val)
   })
   
+  #' Renderiza curva OC para muestreo por variables
+  #'
+  #' @description
+  #' Genera gráfico de la curva de características operativas mostrando la
+  #' probabilidad de aceptación del lote en función de la proporción de
+  #' unidades no conformes.
+  #'
+  #' @return Gráfico base R renderizado
+  #' @keywords internal
   output$var_oc_plot <- renderPlot({
     data <- var_oc_data()
     
@@ -132,6 +220,14 @@ server <- function(input, output, session) {
     grid()
   })
   
+  #' Renderiza curva ASN para muestreo por variables
+  #'
+  #' @description
+  #' Genera gráfico del tamaño promedio de muestra (ASN). Para muestreo por
+  #' variables con plan simple, el ASN es constante e igual a n.
+  #'
+  #' @return Gráfico base R renderizado con línea constante
+  #' @keywords internal
   output$var_asn_plot <- renderPlot({
     data <- var_oc_data()
     
@@ -150,6 +246,14 @@ server <- function(input, output, session) {
   # SERVER LOGIC: ATRIBUTOS (Z1.4)
   # ===========================================================================
   
+  #' Reactivo para plan de muestreo por atributos
+  #'
+  #' @description
+  #' Calcula el plan de muestreo por atributos según la norma Z1.4. Soporta
+  #' planes de muestreo simple, doble y múltiple.
+  #'
+  #' @return Dataframe con parámetros del plan o mensaje de error
+  #' @keywords internal
   attr_plan_data <- reactive({
     idPlan <- lookup_id(choice_plans, input$attr_plan)
     idType <- lookup_id(type_df, input$attr_type)
@@ -170,6 +274,15 @@ server <- function(input, output, session) {
     samplePlan
   })
   
+  #' Renderiza tabla del plan de muestreo por atributos
+  #'
+  #' @description
+  #' Genera tabla formateada con los parámetros del plan de muestreo por
+  #' atributos. Para planes dobles y múltiples, muestra múltiples filas con
+  #' los criterios de aceptación/rechazo para cada etapa.
+  #'
+  #' @return Tabla HTML renderizada
+  #' @keywords internal
   output$attr_plan_table <- renderTable({
     df <- attr_plan_data()
     if ("n" %in% names(df)) {
@@ -187,6 +300,15 @@ server <- function(input, output, session) {
   
 
   
+  #' Manejador de descarga para plan de muestreo por atributos
+  #'
+  #' @description
+  #' Exporta el plan de muestreo por atributos en formato CSV con codificación
+  #' UTF-8 BOM. Maneja correctamente planes múltiples con varias etapas de
+  #' muestreo.
+  #'
+  #' @return Archivo CSV descargable
+  #' @keywords internal
   output$download_attr_plan <- downloadHandler(
     filename = function() {
       paste0("plan_atributos_", Sys.Date(), ".csv")
@@ -260,6 +382,15 @@ server <- function(input, output, session) {
     }
   )
   
+  #' Reactivo para datos de curvas OC y ASN (atributos)
+  #'
+  #' @description
+  #' Calcula la curva de características operativas (OC) y el tamaño promedio
+  #' de muestra (ASN) para el plan de muestreo por atributos seleccionado.
+  #' Soporta cálculos para planes simple, doble y múltiple.
+  #'
+  #' @return Lista con objeto OCASNS o mensaje de error
+  #' @keywords internal
   attr_curves_data <- reactive({
     idPlan <- lookup_id(choice_plans, input$attr_plan)
     idType <- lookup_id(type_df, input$attr_type)
@@ -288,6 +419,14 @@ server <- function(input, output, session) {
     list(OCASNS = OCASNS, error = NULL)
   })
   
+  #' Renderiza curva OC para muestreo por atributos
+  #'
+  #' @description
+  #' Genera gráfico de la curva de características operativas para el plan de
+  #' muestreo por atributos. Muestra mensaje de error si el plan no es válido.
+  #'
+  #' @return Gráfico base R renderizado
+  #' @keywords internal
   output$attr_oc_plot <- renderPlot({
     data <- attr_curves_data()
     
@@ -305,6 +444,15 @@ server <- function(input, output, session) {
     grid()
   })
   
+  #' Renderiza curva ASN para muestreo por atributos
+  #'
+  #' @description
+  #' Genera gráfico del tamaño promedio de muestra (ASN) para el plan de
+  #' muestreo por atributos. Para planes dobles y múltiples, el ASN varía
+  #' según la proporción no conforme del lote.
+  #'
+  #' @return Gráfico base R renderizado
+  #' @keywords internal
   output$attr_asn_plot <- renderPlot({
     data <- attr_curves_data()
     
