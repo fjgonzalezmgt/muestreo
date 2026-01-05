@@ -224,10 +224,21 @@ server <- function(input, output, session) {
   output$var_planSummary <- renderTable({
     plan <- var_plan_var()
     validate(need(!is.null(plan), ""))
-    df <- data.frame(Parametro = names(plan), Valor = unname(plan), row.names = NULL)
-    df$Valor[df$Parametro == "n"] <- as.integer(round(df$Valor[df$Parametro == "n"], 0))
+    df <- data.frame(Parametro = names(plan), Valor = as.character(unname(plan)), stringsAsFactors = FALSE, row.names = NULL)
+    # Formatear n sin decimales
+    if ("n" %in% df$Parametro) {
+      n_val <- as.numeric(plan[["n"]])
+      df$Valor[df$Parametro == "n"] <- as.character(round(n_val, 0))
+    }
+    # Formatear k y M con 5 decimales
+    for (param in c("k", "M")) {
+      if (param %in% df$Parametro) {
+        param_val <- as.numeric(plan[[param]])
+        df$Valor[df$Parametro == param] <- format(round(param_val, 5), nsmall = 5)
+      }
+    }
     df
-  }, striped = TRUE, bordered = TRUE, digits = 5)
+  }, striped = TRUE, bordered = TRUE)
   
 
   
