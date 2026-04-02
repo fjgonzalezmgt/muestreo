@@ -2,11 +2,138 @@
 #'
 #' @import shiny
 #' @import AcceptanceSampling
+#' @import openxlsx
 
 library(shiny)
 library(AcceptanceSampling)
 
 source("aql_functions.R")
+
+format_export_value <- function(value, digits = 5) {
+  if (length(value) == 0 || is.null(value) || is.na(value)) {
+    return("")
+  }
+
+  if (is.numeric(value)) {
+    rounded <- round(value, digits)
+    return(format(rounded, nsmall = ifelse(rounded %% 1 == 0, 0, digits), trim = TRUE))
+  }
+
+  as.character(value)
+}
+
+build_input_export <- function(lang, rows) {
+  data.frame(
+    Field = rows$Field,
+    Value = rows$Value,
+    stringsAsFactors = FALSE
+  )
+}
+
+build_results_export <- function(fields, values) {
+  data.frame(
+    Field = fields,
+    Value = values,
+    stringsAsFactors = FALSE
+  )
+}
+
+build_plan_table_export <- function(plan_data, lang) {
+  export_df <- as.data.frame(plan_data, stringsAsFactors = FALSE)
+
+  if (!is.null(rownames(export_df)) && any(nzchar(rownames(export_df)))) {
+    export_df <- cbind(
+      Sample = rownames(export_df),
+      export_df,
+      stringsAsFactors = FALSE
+    )
+    rownames(export_df) <- NULL
+  }
+
+  export_df[] <- lapply(export_df, function(column) {
+    vapply(column, format_export_value, character(1))
+  })
+
+  names(export_df)[1] <- tr(lang, "sample_label")
+  export_df
+}
+
+estimate_column_widths <- function(data, padding = 3, min_width = 14, max_width = 40) {
+  vapply(seq_along(data), function(index) {
+    column_values <- c(names(data)[index], as.character(data[[index]]))
+    width <- max(nchar(column_values, type = "width"), na.rm = TRUE) + padding
+    min(max(width, min_width), max_width)
+  }, numeric(1))
+}
+
+style_workbook_sheet <- function(wb, sheet, data, lang, title) {
+  header_style <- openxlsx::createStyle(
+    fgFill = "#0C5F7E",
+    fontColour = "#FFFFFF",
+    halign = "center",
+    textDecoration = "bold",
+    border = "Bottom"
+  )
+  title_style <- openxlsx::createStyle(
+    textDecoration = "bold",
+    fontSize = 14,
+    fontColour = "#0C5F7E"
+  )
+  text_style <- openxlsx::createStyle(
+    valign = "top"
+  )
+
+  openxlsx::addWorksheet(wb, sheet)
+  openxlsx::writeData(wb, sheet, title, startRow = 1, startCol = 1)
+  openxlsx::addStyle(wb, sheet, title_style, rows = 1, cols = 1, gridExpand = TRUE)
+  openxlsx::writeData(wb, sheet, data, startRow = 3, startCol = 1, withFilter = FALSE)
+  openxlsx::addStyle(
+    wb, sheet, header_style,
+    rows = 3, cols = seq_len(ncol(data)),
+    gridExpand = TRUE, stack = TRUE
+  )
+  openxlsx::addStyle(
+    wb, sheet, text_style,
+    rows = 4:(nrow(data) + 3), cols = seq_len(ncol(data)),
+    gridExpand = TRUE, stack = TRUE
+  )
+  openxlsx::addFilter(wb, sheet, rows = 3, cols = seq_len(ncol(data)))
+  openxlsx::freezePane(wb, sheet, firstActiveRow = 4)
+  openxlsx::setColWidths(
+    wb, sheet,
+    cols = seq_len(ncol(data)),
+    widths = estimate_column_widths(data)
+  )
+}
+
+write_formatted_workbook <- function(file, lang, input_data, result_sheets, title) {
+  wb <- openxlsx::createWorkbook()
+
+  names(input_data) <- c(tr(lang, "field_col"), tr(lang, "value_col"))
+  style_workbook_sheet(
+    wb = wb,
+    sheet = tr(lang, "workbook_sheet_inputs"),
+    data = input_data,
+    lang = lang,
+    title = paste(title, "-", tr(lang, "input_parameters_section"))
+  )
+
+  for (sheet_name in names(result_sheets)) {
+    sheet_data <- result_sheets[[sheet_name]]
+    if (identical(names(sheet_data), c("Field", "Value"))) {
+      names(sheet_data) <- c(tr(lang, "field_col"), tr(lang, "value_col"))
+    }
+    style_workbook_sheet(
+      wb = wb,
+      sheet = sheet_name,
+      data = sheet_data,
+      lang = lang,
+      title = paste(title, "-", sheet_name)
+    )
+  }
+
+  openxlsx::saveWorkbook(wb, file, overwrite = TRUE)
+}
 
 server <- function(input, output, session) {
   current_lang <- reactive({
@@ -80,21 +207,26 @@ server <- function(input, output, session) {
   }, striped = TRUE, bordered = TRUE)
 
   output$download_var_plan <- downloadHandler(
-    filename = function() tr(current_lang(), "sample_plan_variables_file"),
+    filename = function() {
+      paste0(tr(current_lang(), "sample_plan_variables_file"), "_", Sys.Date(), ".xlsx")
+    },
     content = function(file) {
       plan <- var_plan_var()
       validate(need(!is.null(plan), ""))
 
-      params_df <- data.frame(
-        Seccion = c(tr(current_lang(), "input_section"), "", "", "", ""),
-        Parametro = c(
-          tr(current_lang(), "standard"),
-          tr(current_lang(), "sampling_type"),
-          tr(current_lang(), "inspection_level_file"),
-          tr(current_lang(), "lot_size_file"),
+      lang <- current_lang()
+
+      inputs_df <- build_input_export(lang, data.frame(
+        Field = c(
+          tr(lang, "generated_on"),
+          tr(lang, "standard"),
+          tr(lang, "sampling_type"),
+          tr(lang, "inspection_level_file"),
+          tr(lang, "lot_size_file"),
           "AQL"
         ),
-        Valor = c(
+        Value = c(
+          format(Sys.time(), "%Y-%m-%d %H:%M:%S"),
           "ANSI/ASQ Z1.9",
           input$var_type,
           input$var_level,
@@ -102,26 +234,23 @@ server <- function(input, output, session) {
           input$var_aql
         ),
         stringsAsFactors = FALSE
+      ))
+
+      results_df <- build_results_export(
+        fields = names(plan),
+        values = vapply(unname(plan), format_export_value, character(1))
       )
 
-      plan_df <- data.frame(
-        Seccion = c("", rep(tr(current_lang(), "plan_section"), length(plan))),
-        Parametro = c("", names(plan)),
-        Valor = c("", unname(plan)),
-        stringsAsFactors = FALSE
+      write_formatted_workbook(
+        file = file,
+        lang = lang,
+        input_data = inputs_df,
+        result_sheets = setNames(
+          list(results_df),
+          tr(lang, "workbook_sheet_results")
+        ),
+        title = tr(lang, "variables_plan_title")
       )
-
-      final_df <- rbind(params_df, plan_df)
-      write.csv(final_df, file, row.names = FALSE, fileEncoding = "UTF-8")
-
-      con <- file(file, open = "r+b")
-      content <- readBin(con, "raw", n = file.info(file)$size)
-      close(con)
-
-      con <- file(file, open = "wb")
-      writeBin(as.raw(c(0xef, 0xbb, 0xbf)), con)
-      writeBin(content, con)
-      close(con)
     }
   )
 
@@ -212,22 +341,24 @@ server <- function(input, output, session) {
 
   output$download_attr_plan <- downloadHandler(
     filename = function() {
-      paste0(tr(current_lang(), "sample_plan_attributes_file"), Sys.Date(), ".csv")
+      paste0(tr(current_lang(), "sample_plan_attributes_file"), Sys.Date(), ".xlsx")
     },
     content = function(file) {
       plan_data <- attr_plan_data()
+      lang <- current_lang()
 
-      params_df <- data.frame(
-        Seccion = c(tr(current_lang(), "input_section"), "", "", "", "", ""),
-        Parametro = c(
-          tr(current_lang(), "standard"),
-          tr(current_lang(), "sampling_plan_file"),
-          tr(current_lang(), "sampling_type"),
-          tr(current_lang(), "inspection_level_file"),
-          tr(current_lang(), "lot_size_file"),
+      inputs_df <- build_input_export(lang, data.frame(
+        Field = c(
+          tr(lang, "generated_on"),
+          tr(lang, "standard"),
+          tr(lang, "sampling_plan_file"),
+          tr(lang, "sampling_type"),
+          tr(lang, "inspection_level_file"),
+          tr(lang, "lot_size_file"),
           "AQL"
         ),
-        Valor = c(
+        Value = c(
+          format(Sys.time(), "%Y-%m-%d %H:%M:%S"),
           "ANSI/ASQ Z1.4",
           input$attr_plan,
           input$attr_type,
@@ -236,56 +367,27 @@ server <- function(input, output, session) {
           input$attr_aql
         ),
         stringsAsFactors = FALSE
-      )
+      ))
 
       if ("Message" %in% names(plan_data)) {
-        plan_df <- data.frame(
-          Seccion = tr(current_lang(), "plan_section"),
-          Parametro = "Message",
-          Valor = plan_data$Message,
-          stringsAsFactors = FALSE
+        result_sheets <- setNames(
+          list(build_results_export("Message", plan_data$Message)),
+          tr(lang, "workbook_sheet_results")
         )
       } else {
-        n_rows <- nrow(plan_data)
-        plan_names <- names(plan_data)
-        plan_rows <- list(
-          data.frame(Seccion = "", Parametro = "", Valor = "", stringsAsFactors = FALSE)
+        result_sheets <- setNames(
+          list(build_plan_table_export(plan_data, lang)),
+          tr(lang, "workbook_sheet_results")
         )
-
-        for (i in seq_len(n_rows)) {
-          if (n_rows > 1) {
-            plan_rows[[length(plan_rows) + 1]] <- data.frame(
-              Seccion = tr(current_lang(), "plan_section"),
-              Parametro = paste0("=== ", tr(current_lang(), "sample_label"), i, " ==="),
-              Valor = "",
-              stringsAsFactors = FALSE
-            )
-          }
-
-          for (j in seq_along(plan_names)) {
-            plan_rows[[length(plan_rows) + 1]] <- data.frame(
-              Seccion = tr(current_lang(), "plan_section"),
-              Parametro = plan_names[j],
-              Valor = as.character(plan_data[i, j]),
-              stringsAsFactors = FALSE
-            )
-          }
-        }
-
-        plan_df <- do.call(rbind, plan_rows)
       }
 
-      final_df <- rbind(params_df, plan_df)
-      write.csv(final_df, file, row.names = FALSE, fileEncoding = "UTF-8")
-
-      con <- file(file, open = "r+b")
-      content <- readBin(con, "raw", n = file.info(file)$size)
-      close(con)
-
-      con <- file(file, open = "wb")
-      writeBin(as.raw(c(0xef, 0xbb, 0xbf)), con)
-      writeBin(content, con)
-      close(con)
+      write_formatted_workbook(
+        file = file,
+        lang = lang,
+        input_data = inputs_df,
+        result_sheets = result_sheets,
+        title = tr(lang, "attributes_plan_title")
+      )
     }
   )
 

@@ -21,12 +21,13 @@ Depends:
 Imports:
     shiny (>= 1.7.0),
     bslib (>= 0.4.0),
-    AcceptanceSampling (>= 1.0-6)
+    AcceptanceSampling (>= 1.0-6),
+    openxlsx (>= 4.2.8)
 Suggests:
     testthat (>= 3.0.0),
     covr,
     devtools
 Config/testthat/edition: 3
-Config/testthat/parallel: true
+Config/testthat/parallel: false
 RoxygenNote: 7.2.0
 VignetteBuilder: knitr
