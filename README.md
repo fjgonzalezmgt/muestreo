@@ -14,7 +14,7 @@ Desarrollada por **Quality Analytics**, esta herramienta facilita la seleccion d
 
 Accede a la aplicacion publicada:
 
-https://019b8e74-1e2f-e211-efbc-c9f5543838c0.share.connect.posit.cloud/
+https://019d4f32-2bc5-e940-157a-3ed183ea7d78.share.connect.posit.cloud/
 
 ## Caracteristicas
 
@@ -211,7 +211,7 @@ Adicionalmente, utiliza el paquete `AcceptanceSampling` para el calculo y trazad
 ### Repositorio
 
 - GitHub: https://github.com/fjgonzalezmgt/muestreo
-- Demo: https://019b8e74-1e2f-e211-efbc-c9f5543838c0.share.connect.posit.cloud/
+- Demo: https://019d4f32-2bc5-e940-157a-3ed183ea7d78.share.connect.posit.cloud/
 
 ## Licencia
 
